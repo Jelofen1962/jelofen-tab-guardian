@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>JTG - Jelofen's Tab Guardian</title>
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body class="popup" dir="rtl">
+  <main class="app-shell">
+    <header class="topbar">
+      <div class="brand-lockup">
+        <a class="brand-mark brand-logo-link" href="https://img.icons8.com/?size=100&amp;id=Ex69XW1yBKo2&amp;format=png&amp;color=000000" target="_blank" rel="noopener noreferrer" title="JTG logo by Icons8" aria-label="Open JTG logo source on Icons8">
+          <img id="brandLogo" src="https://img.icons8.com/?size=100&amp;id=Ex69XW1yBKo2&amp;format=png&amp;color=000000" alt="JTG logo" width="28" height="28" referrerpolicy="no-referrer">
+        </a>
+        <div class="brand-copy">
+          <div class="brand-name">JTG <span>Jelofen's Tab Guardian</span></div>
+          <div class="brand-subtitle" data-i18n="subtitle">محافظ تب‌های مرورگر</div>
+        </div>
+      </div>
+      <button class="language-button" id="languageToggle" type="button" aria-label="Change language">EN</button>
+    </header>
+
+    <section class="credit-strip" aria-label="Developer credit">
+      <div class="credit-heading"><span class="credit-dot"></span><strong>Jelofen The Dev</strong></div>
+      <div class="credit-links">
+        <a href="https://t.me/Jelofen1962" target="_blank" rel="noreferrer">t.me/Jelofen1962</a>
+        <span class="credit-separator">·</span>
+        <a href="tel:+989035361164">+989035361164</a>
+      </div>
+    </section>
+
+    <section class="section-card current-card">
+      <div class="section-heading">
+        <span data-i18n="currentTab">تب فعلی</span>
+        <span class="tiny-count"><span id="tabCount">—</span> <span data-i18n="openTabs">تب باز</span></span>
+      </div>
+      <div class="current-row">
+        <div class="current-icon" aria-hidden="true">▣</div>
+        <div class="current-copy">
+          <strong id="currentTitle" class="current-title">در حال بررسی…</strong>
+          <span id="currentHost" class="current-host">—</span>
+        </div>
+      </div>
+      <div class="current-controls">
+        <div class="status-copy">
+          <span id="currentStatus" class="status-label">—</span>
+          <small id="currentMode" class="status-detail">—</small>
+        </div>
+        <button id="siteLockToggle" class="switch" type="button" role="switch" aria-checked="false" aria-label="Toggle lock for this site"><span></span></button>
+      </div>
+      <button id="useGlobal" class="text-button" type="button" data-i18n="useGlobal">استفاده از تنظیم سراسری</button>
+      <p id="unsupportedNote" class="inline-note" hidden data-i18n="unsupported">این صفحه قابل قفل‌گذاری نیست.</p>
+    </section>
+
+    <section class="section-card global-card">
+      <div class="global-copy">
+        <strong data-i18n="globalTitle">قفل خودکار همه سایت‌ها</strong>
+        <small data-i18n="globalDesc">تب‌های وب به‌صورت پیش‌فرض قفل شوند.</small>
+      </div>
+      <button id="globalToggle" class="switch" type="button" role="switch" aria-checked="false" aria-label="Toggle auto lock for all sites"><span></span></button>
+    </section>
+
+    <section class="rules-section">
+      <div class="section-heading rules-heading">
+        <span data-i18n="savedRules">قوانین ذخیره‌شده</span>
+        <span id="ruleCount" class="rule-count">0</span>
+      </div>
+      <div id="rulesList" class="rules-list"></div>
+      <p id="emptyRules" class="empty-state" data-i18n="noRules">هنوز قانون اختصاصی ثبت نشده است.</p>
+    </section>
+
+    <footer class="footer-actions">
+      <button id="restoreLast" class="outline-button" type="button" data-i18n="restoreLast">بازیابی آخرین تب بسته‌شده</button>
+      <p class="limitation" data-i18n="limitation">محدودیت مرورگر: بستن بومی تب کاملاً قابل‌توقف نیست؛ تب‌های قفل‌شده بلافاصله بازیابی می‌شوند.</p>
+    </footer>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>

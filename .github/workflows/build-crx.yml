@@ -1,0 +1,62 @@
+# JTG | Jelofen's Tab Guardian
+# Crafted by: Jelofen The Dev | t.me/Jelofen1962 | +989035361164
+name: Build JTG Chrome/Edge CRX
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Google Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Validate and package JTG
+        shell: bash
+        env:
+          CRX_PRIVATE_KEY_BASE64: ${{ secrets.CRX_PRIVATE_KEY_BASE64 }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist "$RUNNER_TEMP/jtg-extension"
+          rsync -a "$GITHUB_WORKSPACE/" "$RUNNER_TEMP/jtg-extension/" \
+            --exclude '.git/' --exclude '.github/' --exclude 'dist/'
+
+          python -m json.tool "$RUNNER_TEMP/jtg-extension/manifest.json" >/dev/null
+          test -f "$RUNNER_TEMP/jtg-extension/background.js"
+          test -f "$RUNNER_TEMP/jtg-extension/title-lock.js"
+          test -f "$RUNNER_TEMP/jtg-extension/popup.html"
+
+          if [[ -n "${CRX_PRIVATE_KEY_BASE64:-}" ]]; then
+            echo "$CRX_PRIVATE_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/jtg-signing-key.pem"
+            google-chrome --no-sandbox --headless --disable-gpu \
+              --pack-extension="$RUNNER_TEMP/jtg-extension" \
+              --pack-extension-key="$RUNNER_TEMP/jtg-signing-key.pem"
+          else
+            google-chrome --no-sandbox --headless --disable-gpu \
+              --pack-extension="$RUNNER_TEMP/jtg-extension"
+          fi
+
+          cp "$RUNNER_TEMP/jtg-extension.crx" dist/jtg-jelofens-tab-guardian.crx
+          cd "$RUNNER_TEMP/jtg-extension"
+          zip -qr "$GITHUB_WORKSPACE/dist/jtg-jelofens-tab-guardian-source.zip" .
+
+          echo "CRX and source archive created. Signing key intentionally excluded from artifacts."
+
+      - name: Upload JTG release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: jtg-jelofens-tab-guardian
+          path: |
+            dist/jtg-jelofens-tab-guardian.crx
+            dist/jtg-jelofens-tab-guardian-source.zip
+          if-no-files-found: error
+          retention-days: 30

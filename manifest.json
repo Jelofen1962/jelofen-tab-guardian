@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "JTG - Jelofen's Tab Guardian",
+  "short_name": "JTG",
+  "version": "1.1.1",
+  "description": "A minimal tab-lock manager with saved site rules and automatic recovery.",
+  "permissions": [
+    "tabs",
+    "storage",
+    "contextMenus",
+    "sessions",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*",
+    "https://img.icons8.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "JTG - Jelofen's Tab Guardian",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "title-lock.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

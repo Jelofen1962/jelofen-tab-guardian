@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>JTG - Confirm tab close</title>
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body class="popup" dir="rtl">
+  <main class="app-shell">
+    <header class="topbar">
+      <div class="brand-lockup">
+        <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7.5 10V7.7a4.5 4.5 0 0 1 9 0V10"/><rect x="5" y="10" width="14" height="11" rx="1.8"/><path d="M12 14v3"/></svg></div>
+        <div class="brand-copy"><div class="brand-name">JTG <span>Jelofen's Tab Guardian</span></div><div class="brand-subtitle">تأیید بستن تب</div></div>
+      </div>
+    </header>
+    <section class="section-card" style="margin-top:18px">
+      <strong id="confirmHeading">این تب بسته شود؟</strong>
+      <p id="tabTitle" class="current-host" style="margin:12px 0;overflow-wrap:anywhere"></p>
+      <div class="footer-actions" style="display:flex;gap:8px">
+        <button id="cancel" class="outline-button" type="button">باز نگه‌داشتن</button>
+        <button id="confirm" class="outline-button" type="button" style="background:#111;color:#fff">بستن تب</button>
+      </div>
+    </section>
+  </main>
+  <script src="confirm.js"></script>
+</body>
+</html>

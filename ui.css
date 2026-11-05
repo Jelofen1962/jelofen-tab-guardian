@@ -1,0 +1,92 @@
+/*
+╭──────────────────────────────────────────────────────────────╮
+│  JTG  |  JELOFEN'S TAB GUARDIAN                               │
+│  Crafted by : Jelofen The Dev                                 │
+│  Telegram   : https://t.me/Jelofen1962                        │
+│  Contact    : +989035361164                                   │
+╰──────────────────────────────────────────────────────────────╯
+*/
+:root {
+  color-scheme: light;
+  font-family: Inter, "Segoe UI", Tahoma, Arial, sans-serif;
+  color: #111;
+  background: #fff;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --ink: #111;
+  --muted: #777;
+  --line: #e5e5e5;
+  --soft: #f6f6f6;
+  --white: #fff;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--white); color: var(--ink); }
+button, a { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .35; }
+.popup { width: 380px; min-height: 520px; max-height: 640px; overflow-y: auto; }
+.app-shell { padding: 16px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.brand-lockup { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.brand-mark { width: 42px; height: 42px; flex: 0 0 42px; display: grid; place-items: center; border: 1.5px solid var(--ink); border-radius: 11px; background: #fff; overflow: hidden; text-decoration: none; }
+.brand-mark img { display: block; width: 28px; height: 28px; object-fit: contain; }
+.brand-logo-link:hover { background: var(--soft); }
+.brand-logo-link:focus-visible { outline: 2px solid #111; outline-offset: 3px; }
+.brand-copy { min-width: 0; }
+.brand-name { font-size: 15px; line-height: 1.25; font-weight: 800; letter-spacing: -.25px; white-space: nowrap; }
+.brand-name span { display: block; font-size: 10px; font-weight: 550; color: #555; letter-spacing: 0; margin-top: 2px; }
+.brand-subtitle { color: var(--muted); font-size: 10px; margin-top: 4px; }
+.language-button { flex: 0 0 auto; border: 1px solid var(--line); background: #fff; color: #111; border-radius: 8px; padding: 7px 10px; min-width: 42px; font-size: 11px; font-weight: 750; }
+.language-button:hover, .outline-button:hover, .text-button:hover { background: var(--soft); }
+.credit-strip { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 10px; margin: 14px 0 15px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; }
+.credit-heading { display: flex; align-items: center; gap: 7px; font-size: 10px; white-space: nowrap; }
+.credit-dot { width: 6px; height: 6px; border-radius: 50%; background: #111; }
+.credit-links { display: flex; align-items: center; gap: 6px; font-size: 9px; white-space: nowrap; }
+.credit-links a { color: #555; text-decoration: none; }
+.credit-links a:hover { color: #000; text-decoration: underline; }
+.credit-separator { color: #aaa; }
+.section-card { border: 1px solid var(--line); border-radius: 11px; padding: 13px; background: #fff; }
+.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 10px; font-weight: 800; letter-spacing: .45px; color: #555; }
+.tiny-count { font-size: 9px; font-weight: 550; color: #888; letter-spacing: 0; }
+.current-row { display: flex; align-items: center; gap: 10px; margin: 13px 0 12px; min-width: 0; }
+.current-icon { width: 34px; height: 34px; flex: 0 0 34px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--soft); font-size: 17px; }
+.current-copy { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.current-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 750; }
+.current-host { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 10px; direction: ltr; text-align: start; }
+.current-controls { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 10px; border-top: 1px solid #eee; }
+.status-copy { display: flex; flex-direction: column; gap: 4px; }
+.status-label { font-size: 11px; font-weight: 800; }
+.status-label.is-locked { color: #111; }
+.status-label.is-unlocked { color: #777; }
+.status-detail { font-size: 9px; color: #888; }
+.switch { position: relative; display: inline-block; vertical-align: middle; width: 38px; height: 22px; flex: 0 0 38px; border: 1px solid #c9c9c9; border-radius: 99px; padding: 2px; background: #eee; transition: background .14s ease, border-color .14s ease; }
+.switch span { position: absolute; left: 2px; top: 2px; display: block; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 1px solid #bbb; transition: transform .14s ease; }
+.switch.is-on { background: #111; border-color: #111; }
+.switch.is-on span { border-color: #fff; transform: translateX(16px); }
+.text-button { border: 0; padding: 7px 0 0; background: transparent; color: #555; font-size: 9px; text-decoration: underline; text-underline-offset: 2px; }
+.inline-note { margin: 8px 0 0; font-size: 10px; color: #777; }
+.global-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; padding: 12px 13px; }
+.global-copy { display: flex; flex-direction: column; gap: 4px; }
+.global-copy strong { font-size: 11px; }
+.global-copy small { color: var(--muted); font-size: 9px; }
+.rules-section { margin-top: 16px; }
+.rules-heading { margin: 0 1px 8px; }
+.rule-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border: 1px solid var(--line); border-radius: 99px; color: #222; font-size: 9px; }
+.rules-list { display: flex; flex-direction: column; gap: 6px; }
+.rule-row { display: flex; align-items: center; gap: 8px; min-height: 37px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+.rule-host { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; direction: ltr; text-align: start; }
+.rule-state { min-width: 63px; border: 1px solid var(--line); border-radius: 6px; padding: 5px 7px; background: #fff; color: #333; font-size: 9px; font-weight: 750; }
+.rule-state.is-locked { background: #111; color: #fff; border-color: #111; }
+.rule-state.is-unlocked { background: #f5f5f5; color: #555; }
+.remove-rule { width: 23px; height: 23px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: #555; font-size: 16px; line-height: 1; }
+.remove-rule:hover { background: #eee; color: #000; }
+.empty-state { margin: 0; padding: 13px 10px; border: 1px dashed #ddd; border-radius: 8px; color: #888; text-align: center; font-size: 10px; }
+.footer-actions { margin-top: 14px; }
+.outline-button { width: 100%; border: 1px solid #222; border-radius: 8px; padding: 9px 10px; background: #fff; color: #111; font-size: 10px; font-weight: 750; }
+.limitation { margin: 9px 2px 0; color: #888; font-size: 9px; line-height: 1.6; }
+[dir="ltr"] .brand-lockup { flex-direction: row; }
+[dir="ltr"] .credit-strip { direction: ltr; }
+[dir="ltr"] .section-heading { letter-spacing: .45px; }
+[dir="ltr"] .current-host { text-align: left; }
+[hidden] { display: none !important; }
