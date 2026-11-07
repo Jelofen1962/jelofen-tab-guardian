@@ -70,6 +70,7 @@ jobs:
             --exclude '.github/' \
             --exclude 'dist/' \
             --exclude 'windows-guard/' \
+            --exclude 'scripts/' \
             --exclude 'README.md' \
             --exclude '.gitignore'
 
@@ -95,8 +96,13 @@ jobs:
 
           CRX_FILE="JTG-Jelofens-Tab-Guardian-v${EXTENSION_VERSION}.crx"
           test -s "$RUNNER_TEMP/jtg-extension.crx"
+
+          # Reject CRX2, malformed CRX3 headers, missing proofs, or bad signatures
+          # before publishing anything to the GitHub Release.
+          python scripts/verify_crx3.py "$RUNNER_TEMP/jtg-extension.crx"
+
           cp "$RUNNER_TEMP/jtg-extension.crx" "dist/$CRX_FILE"
-          echo "Created dist/$CRX_FILE"
+          echo "Created and cryptographically verified dist/$CRX_FILE"
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2

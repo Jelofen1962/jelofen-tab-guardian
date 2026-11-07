@@ -199,7 +199,7 @@ The workflow at `.github/workflows/build-crx.yml`:
 2. Compiles the Windows companion on a Windows runner as a source-validation step, without uploading its binary.
 3. Reads the extension version directly from `manifest.json`.
 4. Validates the manifest and required extension files.
-5. Packages a Chrome-compatible `.crx` file.
+5. Packages a CRX3 `.crx` file and cryptographically verifies its embedded proof and signature before release.
 6. Creates or updates the matching versioned GitHub Release and uploads **only the CRX asset**.
 
 The release tag and asset name follow the manifest version. For example, version `1.4.0` produces tag `v1.4.0` and asset `JTG-Jelofens-Tab-Guardian-v1.4.0.crx`.
@@ -314,3 +314,11 @@ jelofen-tab-guardian/
 <div align="center">
   <sub>JTG — Jelofen's Tab Guardian · Crafted by Jelofen The Dev</sub>
 </div>
+
+## CRX installation and `CRX_REQUIRED_PROOF_MISSING`
+
+The release workflow packages a CRX3 file and runs `scripts/verify_crx3.py` before publishing it. The verifier checks the CRX3 header, the embedded asymmetric proof, the CRX ID, the signature over the package contents, and the embedded extension manifest. A malformed or unsigned package fails the workflow instead of being released.
+
+**A valid private CRX is not necessarily installable by double-clicking or dragging it into every desktop browser.** On Windows and macOS, Google Chrome restricts ordinary off-store CRX installation. If Chrome reports `CRX_REQUIRED_PROOF_MISSING` for a privately signed GitHub release, this can be a browser distribution-policy restriction rather than a broken ZIP or a missing C# dependency. Repacking the same private CRX does not add Chrome Web Store proof.
+
+For local testing, use **Developer mode → Load unpacked** and select the extension directory that contains `manifest.json`. For public one-click installation and normal browser-managed updates, publish JTG through the Chrome Web Store (and Microsoft Edge Add-ons for Edge users). Keep the private signing key in GitHub Actions secrets; never commit or publish the PEM file.
