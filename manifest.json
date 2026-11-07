@@ -2,18 +2,20 @@
   "manifest_version": 3,
   "name": "JTG - Jelofen's Tab Guardian",
   "short_name": "JTG",
-  "version": "1.3.0",
-  "description": "Bilingual tab protection extension with native beforeunload confirmation and an optional Windows tab-strip close guard companion.",
+  "version": "1.4.0",
+  "description": "Dynamic tab locking, per-site rules, close confirmation, and GitHub release update notifications for Chrome and Edge.",
   "permissions": [
     "tabs",
     "storage",
     "contextMenus",
     "sessions",
-    "scripting"
+    "scripting",
+    "alarms"
   ],
   "host_permissions": [
     "http://*/*",
     "https://*/*",
+    "https://api.github.com/*",
     "https://img.icons8.com/*"
   ],
   "background": {
@@ -23,18 +25,6 @@
     "default_title": "JTG - Jelofen's Tab Guardian",
     "default_popup": "popup.html"
   },
-  "content_scripts": [
-    {
-      "matches": [
-        "http://*/*",
-        "https://*/*"
-      ],
-      "js": [
-        "title-lock.js"
-      ],
-      "run_at": "document_start"
-    }
-  ],
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",

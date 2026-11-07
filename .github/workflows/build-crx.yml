@@ -15,8 +15,25 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  validate-windows-companion:
+    name: Validate Windows companion source
+    runs-on: windows-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Compile Windows companion (no artifact upload)
+        shell: pwsh
+        run: dotnet build .\windows-guard\JTG.TabCloseGuard.csproj --configuration Release
+
   build-and-release:
     name: Build and publish versioned CRX
+    needs: validate-windows-companion
     runs-on: ubuntu-latest
     steps:
       - name: Check out source
@@ -96,6 +113,9 @@ jobs:
 
             This release contains the installable Chrome / Microsoft Edge CRX package only.
             The version is read directly from `manifest.json`.
+
+            JTG checks this repository's latest published release for update notifications.
+            Updates are user-initiated; the extension does not silently install its own CRX.
           files: dist/*.crx
           fail_on_unmatched_files: true
           draft: false

@@ -8,7 +8,7 @@
 */
 :root {
   color-scheme: light;
-  font-family: Inter, "Segoe UI", Tahoma, Arial, sans-serif;
+  font-family: "Vazirmatn", "Vazir", "Segoe UI", Tahoma, Arial, sans-serif;
   color: #111;
   background: #fff;
   font-synthesis: none;
@@ -90,3 +90,22 @@ button:disabled { cursor: not-allowed; opacity: .35; }
 [dir="ltr"] .section-heading { letter-spacing: .45px; }
 [dir="ltr"] .current-host { text-align: left; }
 [hidden] { display: none !important; }
+
+
+/* GitHub release and update controls */
+.update-card { margin-top: 10px; padding: 12px 13px; }
+.update-heading { margin-bottom: 11px; }
+.version-chip { direction: ltr; display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 99px; padding: 3px 7px; color: #444; font-size: 9px; font-weight: 750; letter-spacing: 0; }
+.update-status-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.update-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 4px; }
+.update-copy strong { font-size: 10px; line-height: 1.5; }
+.update-copy small { color: var(--muted); font-size: 9px; direction: auto; }
+.small-outline-button { flex: 0 0 auto; border: 1px solid #222; border-radius: 7px; padding: 7px 9px; background: #fff; color: #111; font-size: 9px; font-weight: 750; }
+.small-outline-button:hover { background: var(--soft); }
+.small-outline-button:disabled { opacity: .45; cursor: wait; }
+.update-open-button { margin-top: 10px; background: #111; color: #fff; }
+.update-open-button:hover { background: #333; color: #fff; }
+.update-preferences { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding-top: 10px; border-top: 1px solid #eee; }
+.update-note { margin: 9px 1px 0; color: #888; font-size: 9px; line-height: 1.65; }
+[dir="ltr"] .update-status-row, [dir="ltr"] .update-preferences { direction: ltr; }
+[dir="ltr"] .update-copy small { text-align: left; }

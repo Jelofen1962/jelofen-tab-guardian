@@ -78,8 +78,8 @@ internal sealed class GuardApplicationContext : ApplicationContext
         _scanTimer.Start();
         StartScan();
 
-        Log("JTG Windows companion started. Watching Chrome and Edge tab close buttons.");
-        _tray.ShowBalloonTip(2500, "JTG Tab Guardian", "Windows tab-close confirmation is active.", ToolTipIcon.Info);
+        Log("JTG Windows companion started. Watching locked Chrome and Edge tabs (🔒 title marker required).");
+        _tray.ShowBalloonTip(2500, "JTG Tab Guardian", "Close confirmation is active for detected locked tabs.", ToolTipIcon.Info);
     }
 
     private void ToggleEnabled()
@@ -97,7 +97,7 @@ internal sealed class GuardApplicationContext : ApplicationContext
         int count;
         lock (_rectLock) count = _targets.Count;
         MessageBox.Show(
-            $"JTG Windows Tab Guard\n\nProtection: {(_enabled ? "ON" : "OFF")}\nDetected tab targets: {count}\n\nThis helper watches Chrome and Edge tab-strip close buttons while it is running.",
+            $"JTG Windows Tab Guard\n\nProtection: {(_enabled ? "ON" : "OFF")}\nDetected tab targets: {count}\n\nThis helper watches close controls for tabs marked with 🔒 while it is running.",
             "JTG - Jelofen's Tab Guardian",
             MessageBoxButtons.OK,
             MessageBoxIcon.Information);
@@ -190,7 +190,7 @@ internal sealed class GuardApplicationContext : ApplicationContext
 
     private bool OnShortcut(BrowserShortcut shortcut)
     {
-        if (!_enabled || !BrowserUiScanner.IsBrowserForegroundWindow()) return false;
+        if (!_enabled || !BrowserUiScanner.IsBrowserForegroundWindow() || !IsShortcutForLockedTab(shortcut)) return false;
         if (Volatile.Read(ref _promptBusy) != 0) return true;
         if (Interlocked.CompareExchange(ref _promptBusy, 1, 0) != 0) return true;
         try
@@ -202,6 +202,18 @@ internal sealed class GuardApplicationContext : ApplicationContext
         {
             Interlocked.Exchange(ref _promptBusy, 0);
             return false;
+        }
+    }
+
+    private bool IsShortcutForLockedTab(BrowserShortcut shortcut)
+    {
+        var foreground = NativeMethods.GetForegroundWindow();
+        if (foreground == IntPtr.Zero) return false;
+        bool closesWholeWindow = shortcut is BrowserShortcut.CtrlShiftW or BrowserShortcut.AltF4;
+        lock (_rectLock)
+        {
+            return _targets.Any(target => target.WindowHandle == foreground &&
+                (closesWholeWindow || target.IsSelected));
         }
     }
 
@@ -309,7 +321,7 @@ internal sealed class CloseConfirmDialog : Form
     }
 }
 
-internal sealed record TabHitTarget(Rectangle TabBounds, Rectangle CloseButton);
+internal sealed record TabHitTarget(IntPtr WindowHandle, Rectangle TabBounds, Rectangle CloseButton, bool IsSelected);
 internal readonly record struct MousePoint(int X, int Y);
 internal enum MouseButtonKind { Left, Middle }
 
@@ -328,6 +340,7 @@ internal static class BrowserUiScanner
         }
         catch { return false; }
     }
+
 
     public static List<TabHitTarget> Scan()
     {
@@ -366,12 +379,19 @@ internal static class BrowserUiScanner
                 {
                     try
                     {
+                        // JTG writes this title prefix only while the hostname is locked.
+                        // Filtering by the accessible tab name keeps the native helper in
+                        // sync with the extension's saved global and per-site lock rules.
+                        var tabName = tab.Current.Name ?? string.Empty;
+                        if (!tabName.StartsWith("🔒", StringComparison.Ordinal)) continue;
+
                         var bounds = ToRectangle(tab.Current.BoundingRectangle);
                         if (bounds.Width < 32 || bounds.Height < 12 || tab.Current.IsOffscreen) continue;
 
                         var closeRect = FindCloseButton(tab, bounds);
                         if (closeRect.Width <= 0 || closeRect.Height <= 0) closeRect = GuessCloseButton(bounds);
-                        result.Add(new TabHitTarget(bounds, closeRect));
+                        bool isSelected = IsSelectedTab(tab);
+                        result.Add(new TabHitTarget(hwnd, bounds, closeRect, isSelected));
                     }
                     catch (ElementNotAvailableException) { }
                     catch (InvalidOperationException) { }
@@ -382,6 +402,22 @@ internal static class BrowserUiScanner
             catch (InvalidOperationException) { }
         }
         return result;
+    }
+
+    private static bool IsSelectedTab(AutomationElement tab)
+    {
+        try
+        {
+            if (tab.TryGetCurrentPattern(SelectionItemPattern.Pattern, out object patternObject) &&
+                patternObject is SelectionItemPattern selection)
+                return selection.Current.IsSelected;
+        }
+        catch (ElementNotAvailableException) { }
+        catch (InvalidOperationException) { }
+        catch (COMException) { }
+
+        try { return tab.Current.HasKeyboardFocus; }
+        catch { return false; }
     }
 
     private static Rectangle FindCloseButton(AutomationElement tab, Rectangle tabBounds)

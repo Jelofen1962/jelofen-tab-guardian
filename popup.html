@@ -70,6 +70,29 @@
       <button id="nativeModeToggle" class="switch" type="button" role="switch" aria-checked="false" aria-label="Use Windows companion for close confirmations"><span></span></button>
     </section>
 
+    <section class="section-card update-card" aria-labelledby="updateHeading">
+      <div class="section-heading update-heading">
+        <span id="updateHeading" data-i18n="updateTitle">به‌روزرسانی JTG</span>
+        <span id="installedVersion" class="version-chip">v1.4.0</span>
+      </div>
+      <div class="update-status-row">
+        <div class="update-copy">
+          <strong id="updateStatus" role="status" aria-live="polite">در حال بررسی…</strong>
+          <small id="updateDetails"></small>
+        </div>
+        <button id="checkUpdates" class="small-outline-button" type="button" data-i18n="checkUpdates">بررسی اکنون</button>
+      </div>
+      <button id="openUpdate" class="outline-button update-open-button" type="button" hidden data-i18n="updateOpen">مشاهده و دریافت نسخه جدید</button>
+      <div class="update-preferences">
+        <div class="global-copy">
+          <strong data-i18n="autoUpdateTitle">بررسی خودکار به‌روزرسانی</strong>
+          <small data-i18n="autoUpdateDesc">هر ۶ ساعت و هنگام شروع مرورگر، انتشارهای GitHub بررسی شوند.</small>
+        </div>
+        <button id="autoUpdateToggle" class="switch" type="button" role="switch" aria-checked="true" aria-label="Check for updates automatically"><span></span></button>
+      </div>
+      <p class="update-note" data-i18n="updateNote">نصب خودکار خارج از فروشگاه مرورگر پشتیبانی نمی‌شود؛ برای نصب نسخه جدید باید فایل CRX را از انتشار GitHub دریافت کنید.</p>
+    </section>
+
     <section class="rules-section">
       <div class="section-heading rules-heading">
         <span data-i18n="savedRules">قوانین ذخیره‌شده</span>
