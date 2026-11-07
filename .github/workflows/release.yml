@@ -1,0 +1,141 @@
+# JTG | Jelofen's Tab Guardian
+# Crafted by: Jelofen The Dev | https://t.me/Jelofen1962 | +989035361164
+name: Release JTG (GitHub ZIP)
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: jtg-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-release:
+    name: Validate, package, and publish JTG
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Read version and validate extension
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(python -c 'import json; print(json.load(open("manifest.json", encoding="utf-8"))["version"])')"
+          if [[ ! "$VERSION" =~ ^[0-9]+(\.[0-9]+){1,3}$ ]]; then
+            echo "::error::Invalid extension version in manifest.json: $VERSION"
+            exit 1
+          fi
+
+          python -m json.tool manifest.json >/dev/null
+          for file in background.js title-lock.js popup.html popup.js confirm.html confirm.js ui.css icons/icon16.png icons/icon48.png icons/icon128.png; do
+            test -s "$file" || { echo "::error::Required extension file is missing: $file"; exit 1; }
+          done
+
+          node --check background.js
+          node --check title-lock.js
+          node --check popup.js
+          node --check confirm.js
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Validated JTG v$VERSION"
+
+      - name: Build installable extension ZIP
+        shell: bash
+        env:
+          EXTENSION_VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist "$RUNNER_TEMP/jtg-extension"
+
+          # Keep manifest.json at the ZIP root so users can select the
+          # extracted folder directly with Developer mode -> Load unpacked.
+          rsync -a "$GITHUB_WORKSPACE/" "$RUNNER_TEMP/jtg-extension/" \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude 'dist/' \
+            --exclude 'windows-guard/' \
+            --exclude 'scripts/' \
+            --exclude '.gitignore' \
+            --exclude '*.crx' \
+            --exclude '*.pem'
+
+          PACKAGE="JTG-Jelofens-Tab-Guardian-v${EXTENSION_VERSION}.zip"
+          (
+            cd "$RUNNER_TEMP/jtg-extension"
+            zip -qr "$GITHUB_WORKSPACE/dist/$PACKAGE" .
+          )
+
+          test -s "dist/$PACKAGE"
+          unzip -t "dist/$PACKAGE"
+          unzip -Z1 "dist/$PACKAGE" | grep -qx 'manifest.json'
+          unzip -p "dist/$PACKAGE" manifest.json | python -c \
+            'import json,sys; d=json.load(sys.stdin); assert d["version"] == sys.argv[1], (d["version"], sys.argv[1])' \
+            "$EXTENSION_VERSION"
+
+          echo "Created installable package: dist/$PACKAGE"
+
+      - name: Remove legacy CRX assets from an existing release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.meta.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            while IFS= read -r asset_name; do
+              if [[ "${asset_name,,}" == *.crx ]]; then
+                echo "Removing obsolete CRX release asset: $asset_name"
+                gh release delete-asset "$RELEASE_TAG" "$asset_name" --yes
+              fi
+            done < <(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name')
+          fi
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: JTG - Jelofen's Tab Guardian v${{ steps.meta.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          body: |
+            # JTG - Jelofen's Tab Guardian
+
+            **Version:** v${{ steps.meta.outputs.version }}  
+            **Crafted by:** Jelofen The Dev  
+            **Telegram:** https://t.me/Jelofen1962  
+            **Contact:** +989035361164
+
+            ## Download
+
+            Download `JTG-Jelofens-Tab-Guardian-v${{ steps.meta.outputs.version }}.zip` below.
+
+            ## Install on Chrome or Edge
+
+            1. Extract the ZIP file to a permanent folder.
+            2. Open `chrome://extensions` (Chrome) or `edge://extensions` (Edge).
+            3. Enable **Developer mode**.
+            4. Click **Load unpacked** and select the extracted folder containing `manifest.json`.
+
+            ## Update
+
+            Download and extract the new ZIP, replace the previous extension files in the same folder, then click **Reload** on the browser's extensions page. Keep using the same folder to preserve the unpacked extension identity.
+
+            **Distribution note:** GitHub Releases provide the installable source ZIP. A privately signed CRX hosted on GitHub is not accepted by every desktop Chrome installation; Chrome Web Store proof cannot be generated by GitHub Actions.
+          files: dist/*.zip
+          fail_on_unmatched_files: true
+          draft: false
+          prerelease: false
+          make_latest: true
+          overwrite_files: true

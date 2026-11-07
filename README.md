@@ -13,7 +13,7 @@
   <p><strong>A lightweight, bilingual tab-locking extension for Google Chrome and Microsoft Edge.</strong></p>
   <p>
     <a href="https://github.com/Jelofen1962/jelofen-tab-guardian/releases/latest"><img src="https://img.shields.io/github/v/release/Jelofen1962/jelofen-tab-guardian?display_name=tag&style=flat-square" alt="Latest release"></a>
-    <a href="https://github.com/Jelofen1962/jelofen-tab-guardian/actions/workflows/build-crx.yml"><img src="https://img.shields.io/github/actions/workflow/status/Jelofen1962/jelofen-tab-guardian/build-crx.yml?branch=main&style=flat-square&label=release%20build" alt="Release build"></a>
+    <a href="https://github.com/Jelofen1962/jelofen-tab-guardian/actions/workflows/release.yml"><img src="https://img.shields.io/github/actions/workflow/status/Jelofen1962/jelofen-tab-guardian/release.yml?branch=main&style=flat-square&label=release%20build" alt="Release build"></a>
     <img src="https://img.shields.io/badge/Manifest-V3-111111?style=flat-square" alt="Manifest V3">
     <img src="https://img.shields.io/badge/Chrome-Edge-111111?style=flat-square" alt="Chrome and Edge">
     <img src="https://img.shields.io/badge/UI-English%20%2F%20Persian-111111?style=flat-square" alt="English and Persian UI">
@@ -99,7 +99,7 @@ The companion uses the `🔒` prefix in each tab's accessible title as its lock 
 - Displays the installed version and latest release version, with a link to the release page when an update is available.
 - Adds a `NEW` badge to the JTG toolbar icon when a newer release is detected.
 
-JTG does **not** silently download or install its own CRX. Chromium restricts silent self-installation for manually installed extensions. When an update is found, review the GitHub Release and install the new CRX using the browser's supported installation method. The update checker is a notification mechanism, not a forced-update or remote-code mechanism.
+JTG does **not** silently download or install updates. When a newer release is found, open the GitHub Release, download its versioned ZIP, extract it, and update the unpacked extension from the same folder. The update checker is a notification mechanism, not a forced-update or remote-code mechanism.
 
 ## User interface
 
@@ -128,11 +128,19 @@ The stylesheet prioritizes **Vazirmatn**. If Vazirmatn is not installed on the o
 
 After changing extension source files, return to the extensions page and select **Reload**. A page controller that is already running in an open tab may need that tab to be refreshed before testing changes to the controller source.
 
-### Install a packaged release
+### Install a GitHub release (free, no store account required)
+
+JTG is distributed from GitHub as an installable ZIP. This avoids the `CRX_REQUIRED_PROOF_MISSING` problem that can occur when a privately signed CRX is installed outside an approved extension store.
 
 1. Open the [latest GitHub Release](https://github.com/Jelofen1962/jelofen-tab-guardian/releases/latest).
-2. Download the versioned `.crx` asset.
-3. Follow the installation method permitted by your browser and device policy. Some Chrome and Edge configurations restrict installing CRX files from outside their extension stores; in those environments, use **Load unpacked** for development or distribute through the relevant extension store or enterprise policy.
+2. Download `JTG-Jelofens-Tab-Guardian-vX.Y.Z.zip` from the release assets.
+3. Extract the ZIP to a permanent folder. Do not select the ZIP itself.
+4. Open `chrome://extensions` in Chrome or `edge://extensions` in Edge.
+5. Enable **Developer mode**.
+6. Click **Load unpacked** and select the extracted folder containing `manifest.json`.
+7. Pin JTG to the browser toolbar.
+
+This is a free, direct GitHub distribution method. It requires Developer mode and does not provide the one-click installation or browser-managed updates of an official extension-store listing.
 
 ## Usage
 
@@ -189,43 +197,35 @@ Start the helper:
 .\windows-guard\publish\JTG.TabCloseGuard.exe
 ```
 
-The GitHub Actions workflow compiles the Windows companion as a validation step, but it does not upload or publish a Windows binary. Its only release asset is the versioned CRX. Build the helper locally using the command above when you need the executable.
+The GitHub release workflow publishes the browser extension ZIP only. It does not upload or publish a Windows companion binary. Build the helper locally using the command above when you need the executable.
 
-## GitHub Releases and CRX signing
+## GitHub Releases and automated packaging
 
-The workflow at `.github/workflows/build-crx.yml`:
+The workflow at `.github/workflows/release.yml` creates the public GitHub release package. It:
 
 1. Runs on pushes to `main` or `master`, and supports manual dispatch.
-2. Compiles the Windows companion on a Windows runner as a source-validation step, without uploading its binary.
-3. Reads the extension version directly from `manifest.json`.
-4. Validates the manifest and required extension files.
-5. Packages a CRX3 `.crx` file and cryptographically verifies its embedded proof and signature before release.
-6. Creates or updates the matching versioned GitHub Release and uploads **only the CRX asset**.
+2. Reads the extension version directly from `manifest.json`.
+3. Validates the manifest, required assets, and JavaScript syntax.
+4. Builds a versioned ZIP with `manifest.json` at the archive root.
+5. Checks the ZIP integrity and confirms that its embedded manifest version matches the release version.
+6. Creates or updates the matching GitHub Release and uploads **only the installable extension ZIP**.
 
-The release tag and asset name follow the manifest version. For example, version `1.4.0` produces tag `v1.4.0` and asset `JTG-Jelofens-Tab-Guardian-v1.4.0.crx`.
-
-### Keep the extension ID stable
-
-For repeatable CRX identity, configure a repository Actions secret named `CRX_PRIVATE_KEY_BASE64` containing the base64-encoded bytes of the extension's private PEM signing key.
-
-Generate the secret value in PowerShell:
-
-```powershell
-[Convert]::ToBase64String([IO.File]::ReadAllBytes(".\your-extension-key.pem"))
-```
-
-Add the output in **GitHub → Settings → Secrets and variables → Actions → New repository secret**.
-
-The workflow uses this secret only for packaging and does not upload the PEM file. Keep the original key backed up securely and never commit it to the repository. If the secret is omitted, each build can use a newly generated signing identity, which can change the extension ID and prevent a packaged update from being recognized as the same extension.
+For example, `manifest.json` version `1.4.0` produces release tag `v1.4.0` and asset `JTG-Jelofens-Tab-Guardian-v1.4.0.zip`. No CRX signing key or GitHub Actions secret is required.
 
 ### Publish a new version
 
-1. Update `version` in `manifest.json` using a valid dotted numeric version, such as `1.4.1`.
-2. Commit and push to `main` or `master`.
-3. Review the **Release JTG Chrome / Edge CRX** workflow run.
-4. Open the matching GitHub Release and verify the versioned `.crx` asset.
+1. Update the `version` field in `manifest.json` (for example, `1.4.1`).
+2. Commit and push to `main` or `master`, or manually run **Release JTG (GitHub ZIP)** from the Actions tab.
+3. Review the workflow run.
+4. Open the matching GitHub Release and confirm that the versioned ZIP is attached.
 
-The extension's update checker reads the latest published release from the same GitHub repository.
+The extension's update checker reads the latest public release from this repository and notifies users when a newer version is available. Updates are installed by the user: download and extract the ZIP, replace the contents of the existing extension folder, and click **Reload** on the browser's extensions page. Keep the same folder path so the unpacked extension identity remains stable.
+
+### Why the release is a ZIP, not a CRX
+
+A valid privately signed CRX is not guaranteed to install through ordinary drag-and-drop or double-click installation on desktop Chrome. Chrome can require Chrome Web Store distribution proof, producing the `CRX_REQUIRED_PROOF_MISSING` error for a privately built CRX. GitHub Actions can create a valid CRX signature, but it cannot create Chrome Web Store proof. Rebuilding or re-signing the same package on GitHub does not bypass this distribution policy.
+
+For a free GitHub release, the supported practical route is to publish the extension files in a ZIP and have users install them through **Developer mode → Load unpacked**. For one-click installation and browser-managed automatic updates, publish through the Chrome Web Store and/or Microsoft Edge Add-ons.
 
 ## Permissions and data handling
 
@@ -241,7 +241,7 @@ The extension's update checker reads the latest published release from the same 
 | `https://api.github.com/*` | Read public release metadata for the update checker. |
 | `https://img.icons8.com/*` | Display the linked Icons8 logo in the popup; a bundled icon is used as a fallback. |
 
-JTG stores its preferences locally through `chrome.storage.local`. It does not send tab URLs, page titles, or browsing history to a JTG server. The update checker contacts GitHub to retrieve public release metadata; opening a release page or downloading its CRX is initiated by the user.
+JTG stores its preferences locally through `chrome.storage.local`. It does not send tab URLs, page titles, or browsing history to a JTG server. The update checker contacts GitHub to retrieve public release metadata; opening a release page or downloading its ZIP package is initiated by the user.
 
 ## Troubleshooting
 
@@ -252,7 +252,7 @@ JTG stores its preferences locally through `chrome.storage.local`. It does not s
 | No native leave-site prompt appears | Chromium may require prior user interaction with the page and may suppress prompts in some contexts. Use the Windows companion for its supported native tab-strip interception. |
 | The same site behaves differently on `www` and non-`www` | Rules are keyed by exact hostname. Add or remove a rule for each hostname as needed. |
 | Update check fails | Check internet access, GitHub availability, and whether the API rate limit has been reached. Manual checks use the public GitHub Releases API. |
-| Packaged update changes the extension ID | Confirm the same `CRX_PRIVATE_KEY_BASE64` secret is configured and that the original PEM key has not changed. |
+| JTG appears as a different extension after an update | Keep the extracted extension in the same folder and use **Reload** rather than removing and re-adding it. |
 | Windows helper misses a tab close button | Review `%LOCALAPPDATA%\JTG\TabCloseGuard.log`; browser layout, scaling, and UI Automation changes can affect detection. |
 
 ## Project structure
@@ -261,7 +261,7 @@ JTG stores its preferences locally through `chrome.storage.local`. It does not s
 jelofen-tab-guardian/
 ├── .github/
 │   └── workflows/
-│       └── build-crx.yml
+│       └── release.yml
 ├── icons/
 │   ├── icon16.png
 │   ├── icon48.png
@@ -291,13 +291,13 @@ jelofen-tab-guardian/
 - Preserved existing per-host rules during settings migration and extension updates.
 - Added scheduled and manual GitHub latest-release checks, with an update notice and release link in the popup.
 - Added the Vazirmatn-first font stack and refined the update controls for both RTL and LTR layouts.
-- Kept the GitHub release workflow focused on publishing a versioned CRX asset only.
+- Changed GitHub distribution to a versioned installable ZIP to avoid off-store CRX proof errors.
 
 ### v1.3.0
 
 - Introduced the optional Windows tab-strip close guard companion.
 - Added Windows companion mode to prevent duplicate page-level and helper confirmation prompts.
-- Added versioned CRX publishing through GitHub Actions.
+- Added automated GitHub Releases packaging for direct ZIP distribution.
 
 ## Developer
 
@@ -314,11 +314,3 @@ jelofen-tab-guardian/
 <div align="center">
   <sub>JTG — Jelofen's Tab Guardian · Crafted by Jelofen The Dev</sub>
 </div>
-
-## CRX installation and `CRX_REQUIRED_PROOF_MISSING`
-
-The release workflow packages a CRX3 file and runs `scripts/verify_crx3.py` before publishing it. The verifier checks the CRX3 header, the embedded asymmetric proof, the CRX ID, the signature over the package contents, and the embedded extension manifest. A malformed or unsigned package fails the workflow instead of being released.
-
-**A valid private CRX is not necessarily installable by double-clicking or dragging it into every desktop browser.** On Windows and macOS, Google Chrome restricts ordinary off-store CRX installation. If Chrome reports `CRX_REQUIRED_PROOF_MISSING` for a privately signed GitHub release, this can be a browser distribution-policy restriction rather than a broken ZIP or a missing C# dependency. Repacking the same private CRX does not add Chrome Web Store proof.
-
-For local testing, use **Developer mode → Load unpacked** and select the extension directory that contains `manifest.json`. For public one-click installation and normal browser-managed updates, publish JTG through the Chrome Web Store (and Microsoft Edge Add-ons for Edge users). Keep the private signing key in GitHub Actions secrets; never commit or publish the PEM file.

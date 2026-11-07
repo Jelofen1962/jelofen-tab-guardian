@@ -114,8 +114,6 @@ jobs:
 
             **Version:** v${{ steps.meta.outputs.version }}  
             **Crafted by:** Jelofen The Dev  
-            **Telegram:** https://t.me/Jelofen1962  
-            **Contact:** +989035361164
 
             This release contains the installable Chrome / Microsoft Edge CRX package only.
             The version is read directly from `manifest.json`.

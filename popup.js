@@ -39,7 +39,7 @@ const I18N = {
     updateCurrent: 'نسخه شما به‌روز است.', updateAvailable: 'نسخه جدید موجود است: ',
     updateOpen: 'مشاهده و دریافت نسخه جدید', updateFailed: 'بررسی به‌روزرسانی انجام نشد. اتصال GitHub را بررسی کنید.',
     updateNever: 'هنوز بررسی نشده است.', lastChecked: 'آخرین بررسی: ',
-    updateNote: 'نصب خودکار خارج از فروشگاه مرورگر پشتیبانی نمی‌شود؛ برای نصب نسخه جدید باید فایل CRX را از انتشار GitHub دریافت کنید.',
+    updateNote: 'برای به‌روزرسانی، ZIP را از انتشار GitHub دریافت و استخراج کنید؛ سپس پوشه حاوی manifest.json را در صفحه افزونه‌ها با Load unpacked بارگذاری کنید یا فایل‌های پوشه قبلی را جایگزین کرده و Reload بزنید.',
     releaseUnavailable: 'اطلاعات نسخه در دسترس نیست.'
   },
   en: {
@@ -61,7 +61,7 @@ const I18N = {
     updateCurrent: 'You are using the latest version.', updateAvailable: 'A newer version is available: ',
     updateOpen: 'View and download update', updateFailed: 'Update check failed. Check your connection to GitHub.',
     updateNever: 'No update check has run yet.', lastChecked: 'Last checked: ',
-    updateNote: 'Chromium does not allow silent self-installation for manually installed extensions. Download the CRX from the GitHub release to update.',
+    updateNote: 'To update, download and extract the ZIP from GitHub Releases. Load the extracted folder with Load unpacked, or replace the files in your existing extension folder and click Reload.',
     releaseUnavailable: 'Release information is unavailable.'
   }
 };

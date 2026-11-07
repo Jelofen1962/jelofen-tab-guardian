@@ -115,15 +115,15 @@ async function checkForUpdates() {
     throw new Error('The latest GitHub release does not have a valid version tag.');
   }
 
-  const crxAsset = Array.isArray(release.assets)
-    ? release.assets.find(asset => String(asset.name || '').toLowerCase().endsWith('.crx'))
+  const packageAsset = Array.isArray(release.assets)
+    ? release.assets.find(asset => String(asset.name || '').toLowerCase().endsWith('.zip'))
     : null;
   const updateInfo = {
     currentVersion,
     latestVersion,
     updateAvailable: compareVersions(latestVersion, currentVersion) > 0,
     releaseUrl: release.html_url || GITHUB_RELEASE_PAGE,
-    downloadUrl: crxAsset?.browser_download_url || null,
+    downloadUrl: packageAsset?.browser_download_url || null,
     releaseName: release.name || `JTG v${latestVersion}`,
     checkedAt: Date.now(),
     error: ''
