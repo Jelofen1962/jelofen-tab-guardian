@@ -1,6 +1,6 @@
 # JTG | Jelofen's Tab Guardian
 # Crafted by: Jelofen The Dev | t.me/Jelofen1962 | +989035361164
-name: Build JTG Chrome/Edge CRX
+name: Release JTG Chrome / Edge CRX
 
 on:
   push:
@@ -8,55 +8,97 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: jtg-crx-release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  build:
+  build-and-release:
+    name: Build and publish versioned CRX
     runs-on: ubuntu-latest
     steps:
       - name: Check out source
         uses: actions/checkout@v4
 
+      - name: Read extension version
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(python -c 'import json; print(json.load(open("manifest.json", encoding="utf-8"))["version"])')"
+          if [[ ! "$VERSION" =~ ^[0-9]+(\.[0-9]+){1,3}$ ]]; then
+            echo "::error::Invalid Chrome extension version in manifest.json: $VERSION"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Release version: $VERSION"
+
       - name: Set up Google Chrome
         uses: browser-actions/setup-chrome@v1
 
-      - name: Validate and package JTG
+      - name: Validate and package CRX
         shell: bash
         env:
           CRX_PRIVATE_KEY_BASE64: ${{ secrets.CRX_PRIVATE_KEY_BASE64 }}
+          EXTENSION_VERSION: ${{ steps.meta.outputs.version }}
         run: |
           set -euo pipefail
           mkdir -p dist "$RUNNER_TEMP/jtg-extension"
+
           rsync -a "$GITHUB_WORKSPACE/" "$RUNNER_TEMP/jtg-extension/" \
-            --exclude '.git/' --exclude '.github/' --exclude 'dist/'
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude 'dist/' \
+            --exclude 'windows-guard/' \
+            --exclude 'README.md' \
+            --exclude '.gitignore'
 
           python -m json.tool "$RUNNER_TEMP/jtg-extension/manifest.json" >/dev/null
           test -f "$RUNNER_TEMP/jtg-extension/background.js"
           test -f "$RUNNER_TEMP/jtg-extension/title-lock.js"
           test -f "$RUNNER_TEMP/jtg-extension/popup.html"
 
+          MANIFEST_VERSION="$(python -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["version"])' "$RUNNER_TEMP/jtg-extension/manifest.json")"
+          test "$MANIFEST_VERSION" = "$EXTENSION_VERSION"
+
           if [[ -n "${CRX_PRIVATE_KEY_BASE64:-}" ]]; then
-            echo "$CRX_PRIVATE_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/jtg-signing-key.pem"
+            printf '%s' "$CRX_PRIVATE_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/jtg-signing-key.pem"
+            test -s "$RUNNER_TEMP/jtg-signing-key.pem"
             google-chrome --no-sandbox --headless --disable-gpu \
               --pack-extension="$RUNNER_TEMP/jtg-extension" \
               --pack-extension-key="$RUNNER_TEMP/jtg-signing-key.pem"
           else
+            echo "::warning::CRX_PRIVATE_KEY_BASE64 is not configured. Chrome will generate a temporary signing key, so the extension ID will change on the next build. Configure the secret to keep a stable extension ID."
             google-chrome --no-sandbox --headless --disable-gpu \
               --pack-extension="$RUNNER_TEMP/jtg-extension"
           fi
 
-          cp "$RUNNER_TEMP/jtg-extension.crx" dist/jtg-jelofens-tab-guardian.crx
-          cd "$RUNNER_TEMP/jtg-extension"
-          zip -qr "$GITHUB_WORKSPACE/dist/jtg-jelofens-tab-guardian-source.zip" .
+          CRX_FILE="JTG-Jelofens-Tab-Guardian-v${EXTENSION_VERSION}.crx"
+          test -s "$RUNNER_TEMP/jtg-extension.crx"
+          cp "$RUNNER_TEMP/jtg-extension.crx" "dist/$CRX_FILE"
+          echo "Created dist/$CRX_FILE"
 
-          echo "CRX and source archive created. Signing key intentionally excluded from artifacts."
-
-      - name: Upload JTG release artifacts
-        uses: actions/upload-artifact@v4
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: jtg-jelofens-tab-guardian
-          path: |
-            dist/jtg-jelofens-tab-guardian.crx
-            dist/jtg-jelofens-tab-guardian-source.zip
-          if-no-files-found: error
-          retention-days: 30
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: JTG - Jelofen's Tab Guardian v${{ steps.meta.outputs.version }}
+          body: |
+            # JTG - Jelofen's Tab Guardian
+
+            **Version:** v${{ steps.meta.outputs.version }}  
+            **Crafted by:** Jelofen The Dev  
+            **Telegram:** https://t.me/Jelofen1962  
+            **Contact:** +989035361164
+
+            This release contains the installable Chrome / Microsoft Edge CRX package only.
+            The version is read directly from `manifest.json`.
+          files: dist/*.crx
+          fail_on_unmatched_files: true
+          draft: false
+          prerelease: false
+          make_latest: true
+          overwrite_files: true

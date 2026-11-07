@@ -9,14 +9,13 @@
 'use strict';
 
 const SETTINGS_KEY = 'jtgSettings';
-const CACHE_KEY = 'jtgTabCache';
 const CONTEXT_MENU_ID = 'jtg-close-confirmed';
-const intentionalCloseIds = new Set();
 
 const DEFAULT_SETTINGS = Object.freeze({
   globalAutoLock: false,
   siteRules: {},
-  language: 'fa'
+  language: 'fa',
+  nativeCompanionMode: false
 });
 
 function isWebUrl(url) {
@@ -42,30 +41,12 @@ async function getSettings() {
 async function getLockState(url) {
   const settings = await getSettings();
   const host = getHost(url);
-  if (!host) return { locked: false, host: '', mode: 'unsupported' };
+  const nativeCompanionMode = Boolean(settings.nativeCompanionMode);
+  if (!host) return { locked: false, host: '', mode: 'unsupported', nativeCompanionMode };
   if (Object.prototype.hasOwnProperty.call(settings.siteRules, host)) {
-    return { locked: Boolean(settings.siteRules[host]), host, mode: 'site' };
+    return { locked: Boolean(settings.siteRules[host]), host, mode: 'site', nativeCompanionMode };
   }
-  return { locked: Boolean(settings.globalAutoLock), host, mode: 'global' };
-}
-
-async function readCache() {
-  const data = await chrome.storage.local.get(CACHE_KEY);
-  return data[CACHE_KEY] || {};
-}
-
-async function writeTab(tab) {
-  if (!tab || !Number.isInteger(tab.id) || !isWebUrl(tab.url)) return;
-  const cache = await readCache();
-  cache[String(tab.id)] = {
-    url: tab.url,
-    title: tab.title || tab.url,
-    windowId: tab.windowId,
-    index: tab.index,
-    pinned: Boolean(tab.pinned),
-    updatedAt: Date.now()
-  };
-  await chrome.storage.local.set({ [CACHE_KEY]: cache });
+  return { locked: Boolean(settings.globalAutoLock), host, mode: 'global', nativeCompanionMode };
 }
 
 async function broadcastLockStates() {
@@ -75,15 +56,9 @@ async function broadcastLockStates() {
     await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['title-lock.js'] }).catch(() => {});
     const state = await getLockState(tab.url);
     chrome.tabs.sendMessage(tab.id, { type: 'jtg-lock-state', ...state }).catch(() => {});
-    await writeTab(tab);
   }
 }
 
-async function removeCachedTab(tabId) {
-  const cache = await readCache();
-  delete cache[String(tabId)];
-  await chrome.storage.local.set({ [CACHE_KEY]: cache });
-}
 
 chrome.runtime.onInstalled.addListener(async () => {
   const current = await chrome.storage.local.get(SETTINGS_KEY);
@@ -99,20 +74,10 @@ chrome.runtime.onInstalled.addListener(async () => {
     });
   });
 
-  const tabs = await chrome.tabs.query({});
-  for (const tab of tabs) {
-    await writeTab(tab);
-    if (tab.id && isWebUrl(tab.url)) {
-      await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['title-lock.js'] }).catch(() => {});
-      const state = await getLockState(tab.url);
-      chrome.tabs.sendMessage(tab.id, { type: 'jtg-lock-state', ...state }).catch(() => {});
-    }
-  }
+  await broadcastLockStates();
 });
 
 chrome.runtime.onStartup.addListener(async () => {
-  const tabs = await chrome.tabs.query({});
-  for (const tab of tabs) await writeTab(tab);
   await broadcastLockStates();
 });
 
@@ -123,9 +88,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message?.type === 'jtg-allow-close' && Number.isInteger(message.tabId)) {
-    intentionalCloseIds.add(message.tabId);
-    sendResponse({ ok: true });
-    return false;
+    chrome.tabs.sendMessage(message.tabId, { type: 'jtg-approved-close' })
+      .catch(() => {})
+      .finally(() => sendResponse({ ok: true }));
+    return true;
   }
 
   if (message?.type === 'jtg-refresh-rules') {
@@ -142,60 +108,8 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   }
 });
 
-chrome.tabs.onCreated.addListener(tab => { writeTab(tab).catch(() => {}); });
-
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.url || changeInfo.title || changeInfo.status === 'complete') {
-    writeTab(tab).catch(() => {});
-  }
-});
-
-chrome.tabs.onActivated.addListener(async ({ tabId }) => {
-  const tab = await chrome.tabs.get(tabId).catch(() => null);
-  if (tab) await writeTab(tab);
-});
-
-chrome.tabs.onMoved.addListener(async tabId => {
-  const tab = await chrome.tabs.get(tabId).catch(() => null);
-  if (tab) await writeTab(tab);
-});
-
-chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
-  const cache = await readCache();
-  const previous = cache[String(tabId)];
-  delete cache[String(tabId)];
-  await chrome.storage.local.set({ [CACHE_KEY]: cache });
-
-  if (intentionalCloseIds.has(tabId)) {
-    intentionalCloseIds.delete(tabId);
-    return;
-  }
-
-  // Whole-window/browser shutdown is left to the browser's own session restore.
-  if (removeInfo.isWindowClosing || !previous || !isWebUrl(previous.url)) return;
-
-  const lockState = await getLockState(previous.url);
-  if (!lockState.locked) return;
-
-  try {
-    const windows = await chrome.windows.getAll({ windowTypes: ['normal'] });
-    const targetWindow = windows.find(window => window.id === previous.windowId);
-    const createOptions = {
-      url: previous.url,
-      active: true,
-      pinned: previous.pinned
-    };
-    if (targetWindow) {
-      createOptions.windowId = previous.windowId;
-      createOptions.index = Math.max(0, Math.min(previous.index || 0, targetWindow.tabs?.length || 0));
-    }
-
-    const restored = await chrome.tabs.create(createOptions);
-    await writeTab(restored);
-  } catch (error) {
-    console.warn('JTG could not recover a locked tab:', error);
-  }
-});
+// JTG now asks before a locked page unloads. It intentionally does not
+// recreate a tab after it closes, avoiding the close-then-reopen behavior.
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId !== CONTEXT_MENU_ID || !tab?.id) return;

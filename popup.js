@@ -9,7 +9,7 @@
 'use strict';
 
 const SETTINGS_KEY = 'jtgSettings';
-const DEFAULT_SETTINGS = { globalAutoLock: false, siteRules: {}, language: 'fa' };
+const DEFAULT_SETTINGS = { globalAutoLock: false, siteRules: {}, language: 'fa', nativeCompanionMode: false };
 const I18N = {
   fa: {
     subtitle: 'محافظ تب‌های مرورگر', currentTab: 'تب فعلی', openTabs: 'تب باز',
@@ -17,7 +17,9 @@ const I18N = {
     customRule: 'قانون اختصاصی این سایت', useGlobal: 'استفاده از تنظیم سراسری',
     globalTitle: 'قفل خودکار همه سایت‌ها', globalDesc: 'تب‌های وب به‌صورت پیش‌فرض قفل شوند.',
     savedRules: 'قوانین ذخیره‌شده', noRules: 'هنوز قانون اختصاصی ثبت نشده است.',
-    restoreLast: 'بازیابی آخرین تب بسته‌شده', limitation: 'محدودیت مرورگر: بستن بومی تب کاملاً قابل‌توقف نیست؛ تب‌های قفل‌شده بلافاصله بازیابی می‌شوند.',
+    restoreLast: 'بازیابی آخرین تب بسته‌شده',
+    companionTitle: 'حالت ابزار ویندوز', companionDesc: 'فقط وقتی ابزار ویندوز JTG در حال اجراست روشن کنید؛ از نمایش دو پیام تأیید جلوگیری می‌کند.',
+    limitation: 'برای گرفتن کلیک روی × و میانبرهای بستن، ابزار Windows را اجرا و حالت ابزار ویندوز را روشن کنید. بدون آن، Ctrl+W از پیام بومی مرورگر استفاده می‌کند.',
     unsupported: 'این صفحه قابل قفل‌گذاری نیست.', loading: 'در حال بررسی…',
     lock: 'قفل کن', unlock: 'بازکردن قفل', removeRule: 'حذف قانون اختصاصی',
     restoreNone: 'تب بسته‌شده‌ای برای بازیابی پیدا نشد.', restoreDone: 'تب بازیابی شد.',
@@ -29,7 +31,9 @@ const I18N = {
     customRule: 'Custom rule for this site', useGlobal: 'Use global setting',
     globalTitle: 'Auto-lock all websites', globalDesc: 'Lock web tabs by default, including new tabs.',
     savedRules: 'SAVED SITE RULES', noRules: 'No custom site rules yet.',
-    restoreLast: 'Restore last closed tab', limitation: 'Browser limitation: native tab closing cannot be fully blocked. Locked tabs are reopened immediately after an individual close.',
+    restoreLast: 'Restore last closed tab',
+    companionTitle: 'Windows companion mode', companionDesc: 'Enable only while the JTG Windows helper is running; prevents duplicate confirmation dialogs.',
+    limitation: 'To catch the tab-strip X and close shortcuts, run the Windows companion and enable Windows companion mode. Without it, Ctrl+W uses the browser’s native prompt.',
     unsupported: 'This page cannot be locked.', loading: 'Checking current tab…',
     lock: 'Lock site', unlock: 'Unlock site', removeRule: 'Remove custom rule',
     restoreNone: 'No recently closed tab was found.', restoreDone: 'Tab restored.',
@@ -106,6 +110,9 @@ function renderGlobal() {
   const on = Boolean(settings.globalAutoLock);
   $('globalToggle').classList.toggle('is-on', on);
   $('globalToggle').setAttribute('aria-checked', String(on));
+  const companion = Boolean(settings.nativeCompanionMode);
+  $('nativeModeToggle').classList.toggle('is-on', companion);
+  $('nativeModeToggle').setAttribute('aria-checked', String(companion));
 }
 
 function renderRules() {
@@ -183,6 +190,12 @@ $('languageToggle').addEventListener('click', async () => {
 
 $('globalToggle').addEventListener('click', async () => {
   settings.globalAutoLock = !settings.globalAutoLock;
+  await saveSettings();
+  render();
+});
+
+$('nativeModeToggle').addEventListener('click', async () => {
+  settings.nativeCompanionMode = !settings.nativeCompanionMode;
   await saveSettings();
   render();
 });

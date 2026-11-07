@@ -17,6 +17,16 @@
   let lastBaseTitle = '';
   let lastRenderedTitle = null;
   let applying = false;
+  let approvedClose = false;
+  let nativeCompanionMode = false;
+
+  // Chromium's native beforeunload dialog is the only available pre-close
+  // confirmation for normal web tabs. The browser controls the dialog text.
+  window.addEventListener('beforeunload', event => {
+    if (!locked || approvedClose || nativeCompanionMode) return;
+    event.preventDefault();
+    event.returnValue = '';
+  }, true);
 
   function stripPrefix(title) {
     return String(title || '').replace(/^🔒\s*/, '');
@@ -59,8 +69,13 @@
   }).observe(document, { childList: true, subtree: true });
 
   chrome.runtime.onMessage.addListener(message => {
+    if (message?.type === 'jtg-approved-close') {
+      approvedClose = true;
+      return;
+    }
     if (message?.type !== 'jtg-lock-state') return;
     locked = Boolean(message.locked);
+    nativeCompanionMode = Boolean(message.nativeCompanionMode);
     if (document.title) lastBaseTitle = stripPrefix(document.title);
     renderTitle();
   });
@@ -68,6 +83,7 @@
   chrome.runtime.sendMessage({ type: 'jtg-get-lock-state' })
     .then(state => {
       locked = Boolean(state?.locked);
+      nativeCompanionMode = Boolean(state?.nativeCompanionMode);
       if (document.title) lastBaseTitle = stripPrefix(document.title);
       renderTitle();
     })
