@@ -11,7 +11,7 @@
 
 A minimal black-and-white Manifest V3 extension for Chrome and Microsoft Edge. JTG marks locked web tabs with a `🔒` prefix in the tab title, remembers global and per-site locking preferences, and automatically reopens individually closed locked tabs when the browser is still running.
 
-**Crafted by:** Jelofen The Dev 
+**Crafted by:** Jelofen The Dev  
 
 The requested Icons8 image is used as the clickable logo in the extension popup. If the image host is unavailable, the popup falls back to the bundled JTG icon. Chrome and Edge require toolbar / manifest icons to be packaged as local files, so the existing local icons remain in use for the browser toolbar.
 
